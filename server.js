@@ -2,7 +2,8 @@ const express = require('express');
 const bodyparser = require('body-parser');
 const mongoose = require('mongoose');
 
-const DB_URI = "mongodb+srv://atlas:exYkcAnTSR0FPpOh@alpha-2vz7i.mongodb.net/test?retryWrites=true&w=majority";
+// const DB_URI = "mongodb+srv://atlas:exYkcAnTSR0FPpOh@alpha-2vz7i.mongodb.net/test?retryWrites=true&w=majority";
+const DB_URI = "mongodb://atlas:exYkcAnTSR0FPpOh@alpha-shard-00-00-2vz7i.mongodb.net:27017,alpha-shard-00-01-2vz7i.mongodb.net:27017,alpha-shard-00-02-2vz7i.mongodb.net:27017/test?ssl=true&replicaSet=Alpha-shard-0&authSource=admin&retryWrites=true&w=majority";
 
 const cors = require('cors');
 const app = express();
