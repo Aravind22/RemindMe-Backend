@@ -4,7 +4,9 @@ const mongoose = require('mongoose');
 
 const DB_URI = "mongodb+srv://atlas:exYkcAnTSR0FPpOh@alpha-2vz7i.mongodb.net/test?retryWrites=true&w=majority";
 
+const cors = require('cors');
 const app = express();
+app.use(cors())
 const { user } = require('./Models/user')
 
 mongoose.connect(DB_URI)
