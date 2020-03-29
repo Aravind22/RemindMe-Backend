@@ -33,7 +33,7 @@ app.post('/api/user/signin', (req,res) => {
         user.comparePassword(req.body.password, function(err, isMatch){
             if(err) throw err
             if(!isMatch) return res.status(400).json({message:'Wrong password'});
-            res.status(200).send('Logged in successfully');
+            res.status(200).json({message:'Logged in Successfully'});
         })
     })
 })
