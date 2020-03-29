@@ -31,9 +31,9 @@ app.post('/api/user/signin', (req,res) => {
         if(!user) res.json({message: 'Login Failed! User not found'})
 
         user.comparePassword(req.body.password, function(err, isMatch){
-            if(err) throw err
-            if(!isMatch) return res.status(400).json({message:'Wrong password'});
-            res.status(200).json({message:'Logged in Successfully'});
+            if(err) return err
+            if(!isMatch) res.status(200).json({message:'Wrong password'});
+            else res.status(200).json({message:'Logged in Successfully'});
         })
     })
 })
