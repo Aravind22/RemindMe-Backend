@@ -7,7 +7,7 @@ const DB_URI = "mongodb+srv://atlas:exYkcAnTSR0FPpOh@alpha-2vz7i.mongodb.net/tes
 const cors = require('cors');
 const app = express();
 app.use(cors())
-const { user } = require('./Models/user')
+const { user } = require('./user')
 
 mongoose.connect(DB_URI)
 .then(() => {console.log("DB Connected")})
