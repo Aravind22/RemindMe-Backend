@@ -10,8 +10,20 @@ const UserSchema = mongoose.Schema({
         type: String,
         required: true,
         minlength: 6
-    }
+    },
+    reminders: [{ type: mongoose.Schema.Types.ObjectId, ref: 'remainder' }]
 });
+
+const reminderSchema = mongoose.Schema({
+    creator: String,
+    date: String,
+    message: [{type: String}]
+})
+
+const scheduleSchema = mongoose.Schema({
+    date: String,
+    users: [{type: String}]
+})
 
 const bcrypt = require('bcrypt');
 let SALT = 10;
@@ -40,6 +52,7 @@ UserSchema.methods.comparePassword = function(userpass, check){
         check(null, isMatch)
     })
 }
-
+const remainder = mongoose.model('remainder', reminderSchema)
 const user = mongoose.model('user', UserSchema);
-module.exports = { user }
+const schedular = mongoose.model('schedular', scheduleSchema)
+module.exports = { user, remainder, schedular }
