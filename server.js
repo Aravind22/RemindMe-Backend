@@ -9,7 +9,6 @@ const cors = require('cors');
 const moment = require('moment');
 
 const app = express();
-app.use(cors())
 const { user, remainder, schedular } = require('./user')
 
 mongoose.connect(DB_URI, {useNewUrlParser: true})
@@ -17,6 +16,7 @@ mongoose.connect(DB_URI, {useNewUrlParser: true})
 .catch(error => console.log(error));
 
 app.use(bodyparser.json());
+app.use(cors())
 
 app.post('/api/user/signup', (req, res) => {
     const user_new = new user({
@@ -91,21 +91,24 @@ function runSchedular(){
     var i;
     var today = moment().format('DD/MM')
     schedular.findOne({'date': today}, (err, schObj) => {
-        userArr = schObj.users
-        for(i=0;i<userArr.length;i++){
-            user.findOne({'email': userArr[i]}, (err, userObj) => {
-                remArr = userObj.reminders
-                for(i=0;i<remArr.length;i++){
-                    remainder.findOne({'_id': remArr[i]}, (err, remObj) => {
-                        if(remObj.date == today){
-                            msgArr = remObj.message
-                            for(i=0;i<msgArr.length;i++){
-                                notifyUser(userObj.email, msgArr[i])
+        if(err) console.log("No schedulers for today")
+        if(schObj){
+            userArr = schObj.users
+            for(i=0;i<userArr.length;i++){
+                user.findOne({'email': userArr[i]}, (err, userObj) => {
+                    remArr = userObj.reminders
+                    for(i=0;i<remArr.length;i++){
+                        remainder.findOne({'_id': remArr[i]}, (err, remObj) => {
+                            if(remObj.date == today){
+                                msgArr = remObj.message
+                                for(i=0;i<msgArr.length;i++){
+                                    notifyUser(userObj.email, msgArr[i])
+                                }
                             }
-                        }
-                    })
-                }
-            })
+                        })
+                    }
+                })
+            }
         }
     })
 }
