@@ -40,6 +40,33 @@ app.post('/api/user/signin', (req,res) => {
     })
 })
 
+app.post('/api/:user/get_reminders', (req, res) => {
+    date_arr = []
+    msg_arr = []
+    msg_temp = []
+    counter = 0;
+    user.findOne({'email': req.params.user}, (err, usr) => {
+        if(err) res.status(400).json({message: "Some error occured in getting reminders"})
+        reminders_array = usr.reminders
+        const forLoop = async _ => {
+            for(i=0;i<reminders_array.length;i++){
+                remainder.findOne({'_id': reminders_array[i]}, (err, rem_obj) => {
+                    if(err) res.status(200).json({message: "some error occured in getting reminerds id"})
+                    date_arr.push(rem_obj.date)
+                    msg_arr.push(rem_obj.message)
+                    if(date_arr.length == reminders_array.length - 1){
+                        setTimeout(function () {
+                            res.status(200).json({date: date_arr, message: msg_arr})
+                          }, 1000)
+                    }
+                    counter++;
+                })
+            }
+        }
+        forLoop();
+    })
+})
+
 app.post('/api/:user/add_date', (req, res) => {
     user.findOne({'email': req.params.user}, (err, usr) => {
         if(err) res.status(200).json({message: 'user not found in database'})
@@ -83,9 +110,9 @@ function updateSchedularList(user, req){
     })
 }
 
-cron.schedule("* * * * * *", function(){
-    runSchedular();
-});
+// cron.schedule("* * * * * *", function(){
+//     runSchedular();
+// });
 
 function runSchedular(){
     var i;
