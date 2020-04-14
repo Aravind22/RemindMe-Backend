@@ -49,7 +49,6 @@ app.post('/api/:user/get_reminders', (req, res) => {
         if(err) res.status(400).json({message: "Some error occured in getting reminders"})
         reminders_array = usr.reminders
         console.log(usr.reminders)
-        console.log(usr.reminders.length)
         if(usr.reminders.length > 0){
             const forLoop = async _ => {
                 for(i=0;i<reminders_array.length;i++){
@@ -57,7 +56,7 @@ app.post('/api/:user/get_reminders', (req, res) => {
                         if(err) res.status(200).json({message: "some error occured in getting reminerds id"})
                         date_arr.push(rem_obj.date)
                         msg_arr.push(rem_obj.message)
-                        if(date_arr.length == reminders_array.length - 1){
+                        if(date_arr.length == reminders_array.length - 1 || reminders_array.length == 1){
                             setTimeout(function () {
                                 res.status(200).json({date: date_arr, message: msg_arr})
                               }, 2000)
