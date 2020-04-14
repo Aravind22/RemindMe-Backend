@@ -40,6 +40,21 @@ app.post('/api/user/signin', (req,res) => {
     })
 })
 
+app.post('/api/:user/delete_reminder/:msg', (req, res) => {
+    remainder.findOne({'creator':req.params.user,'message':req.params.msg}, (err, rem_obj) => {
+        if(err) res.status(200).json({message: "some error occured in getting reminders"})
+        if(rem_obj != null) {
+            msg_array = rem_obj.message;
+            msg_array.splice(msg_array.indexOf(req.params.msg), 1)
+            rem_obj.message = msg_array
+            rem_obj.save()
+            res.status(200).json({message:"Reminder deleted!"})   
+        } else {
+            res.status(200).json({message:"Reminder does not exist"})
+        }
+    })
+})
+
 app.post('/api/:user/get_reminders', (req, res) => {
     date_arr = []
     msg_arr = []
