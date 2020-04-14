@@ -57,7 +57,7 @@ app.post('/api/:user/get_reminders', (req, res) => {
                     if(date_arr.length == reminders_array.length - 1){
                         setTimeout(function () {
                             res.status(200).json({date: date_arr, message: msg_arr})
-                          }, 1000)
+                          }, 2000)
                     }
                     counter++;
                 })
