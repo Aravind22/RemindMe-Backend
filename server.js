@@ -1,3 +1,9 @@
+//                  
+//  
+//      Uncomment the send message method before publishing
+// 
+// 
+
 // const DB_URI = "mongodb+srv://atlas:exYkcAnTSR0FPpOh@alpha-2vz7i.mongodb.net/test?retryWrites=true&w=majority";
 const DB_URI = "mongodb://atlas:exYkcAnTSR0FPpOh@alpha-shard-00-00-2vz7i.mongodb.net:27017,alpha-shard-00-01-2vz7i.mongodb.net:27017,alpha-shard-00-02-2vz7i.mongodb.net:27017/test?ssl=true&replicaSet=Alpha-shard-0&authSource=admin&retryWrites=true&w=majority";
 
@@ -7,6 +13,8 @@ const mongoose = require('mongoose');
 const cron = require('node-cron')
 const cors = require('cors');
 const moment = require('moment');
+const http = require('http')
+const apikey = "FMt57wY9T+0-ONGCvL5tZRZErD8ox09G8NgTkwuoWY"
 
 const app = express();
 const { user, remainder, schedular } = require('./user')
@@ -21,7 +29,8 @@ app.use(cors())
 app.post('/api/user/signup', (req, res) => {
     const user_new = new user({
         email: req.body.email,
-        password: req.body.password
+        password: req.body.password,
+        number: req.body.number
     }).save((err, response) => {
         if(err) res.status(400).send(err)
         res.status(200).json({message: 'User created successfully'});
@@ -88,6 +97,7 @@ app.post('/api/:user/get_reminders', (req, res) => {
 })
 
 app.post('/api/:user/add_date', (req, res) => {
+    var today = moment().format('DD/MM')
     user.findOne({'email': req.params.user}, (err, usr) => {
         if(err) res.status(200).json({message: 'user not found in database'})
         if(!usr) res.status(200).json({message: 'user not registered'})
@@ -111,6 +121,9 @@ app.post('/api/:user/add_date', (req, res) => {
         })
         updateSchedularList(usr, req)
         res.json({message: 'Reminder updated'})
+        if(req.body.date == today){
+            sendMsg(req.body.message, usr.number)
+        }
     })
 })
 
@@ -149,7 +162,7 @@ function runSchedular(){
                             if(remObj.date == today){
                                 msgArr = remObj.message
                                 for(i=0;i<msgArr.length;i++){
-                                    notifyUser(userObj.email, msgArr[i])
+                                    // sendMsg(msgArr[i], userObj.number)
                                 }
                             }
                         })
@@ -164,21 +177,35 @@ function notifyUser(email, msg){
     console.log("Notified " + email + " with " + msg)
 }
 
+app.post('/api/sendMsg', (req,res) => {
+    // Replace X with phone number
+    // sendMsg("Test", "XXXXXXXXXX");
+    res.status(200).json({message: "SMS Delivery Initiated!"})
+})
 
+function sendMsg(msg, number){
+    fMsg = "REMINDME REMINDER\nMessage: " + msg 
+    encodedmsg = encodeURIComponent(fMsg)
+    const data = 'apikey=' + apikey + '&numbers=' + number + '&message=' + encodedmsg + '&sender=TXTLCL';
+    var options = {
+        host: 'api.textlocal.in',
+        path: '/send?' + data      
+    };
 
-// app.post('/api/:user/add_date', async (req,res) => {
-//     const userObj = await user.find({email: req.params.user})
-//     var msg = ['secret', 'second']
-//     try{
-//         await user.updateOne({$set: {'message' : msg}}, function(err, res){
-//             console.log(res)
-//         });
-//         await res.status(200).send(await user.find({email: "admin"}));
-//     }catch(err){
-//         console.log(err);
-//     }
-// })
+    callback = function(response){
+        var str = ''
+        response.on('data', function(chunk){
+            str += chunk;;
+        });
+        response.on('end', function(){
+            var retMsg = JSON.parse(JSON.stringify(str))
+            console.log(str)
+        });
 
+1   }
+    http.request(options, callback).end()
+    
+}
 
 
 

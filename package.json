@@ -16,6 +16,7 @@
     "fs": "0.0.1-security",
     "moment": "^2.24.0",
     "mongoose": "^5.9.6",
-    "node-cron": "^2.0.3"
+    "node-cron": "^2.0.3",
+    "nodemailer": "^6.4.6"
   }
 }

@@ -11,6 +11,11 @@ const UserSchema = mongoose.Schema({
         required: true,
         minlength: 6
     },
+    number: {
+        type: String,
+        required: true,
+        minlength: 10
+    },
     reminders: [{ type: mongoose.Schema.Types.ObjectId, ref: 'remainder' }]
 });
 
