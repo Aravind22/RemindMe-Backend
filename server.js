@@ -1,6 +1,6 @@
 //                  
 //  
-//      Uncomment the send message method before publishing
+//      Uncomment the send message method before deployment
 // 
 // 
 
@@ -17,7 +17,7 @@ const http = require('http')
 const apikey = "FMt57wY9T+0-ONGCvL5tZRZErD8ox09G8NgTkwuoWY"
 
 const app = express();
-const { user, remainder, schedular } = require('./user')
+const { user, remainder, schedular, capsuleSc } = require('./user')
 
 mongoose.connect(DB_URI, {useNewUrlParser: true})
 .then(() => {console.log("DB Connected")})
@@ -27,13 +27,18 @@ app.use(bodyparser.json());
 app.use(cors())
 
 app.post('/api/user/signup', (req, res) => {
+    const capsule = new capsuleSc()
+    capsule.type = true
+    capsule.status = false
+    capsule.save()
     const user_new = new user({
         email: req.body.email,
         password: req.body.password,
-        number: req.body.number
+        number: req.body.number,
+        capsules : capsule
     }).save((err, response) => {
         if(err) res.status(400).send(err)
-        res.status(200).json({message: 'User created successfully'});
+        if(response){res.status(200).json({message: 'User created successfully'});}
     })
 })
 
@@ -68,11 +73,9 @@ app.post('/api/:user/get_reminders', (req, res) => {
     date_arr = []
     msg_arr = []
     msg_temp = []
-    counter = 0;
     user.findOne({'email': req.params.user}, (err, usr) => {
         if(err) res.status(400).json({message: "Some error occured in getting reminders"})
         reminders_array = usr.reminders
-        console.log(usr.reminders)
         if(usr.reminders.length > 0){
             const forLoop = async _ => {
                 for(i=0;i<reminders_array.length;i++){
@@ -85,7 +88,6 @@ app.post('/api/:user/get_reminders', (req, res) => {
                                 res.status(200).json({date: date_arr, message: msg_arr})
                               }, 2000)
                         }
-                        counter++;
                     })
                 }
             }
@@ -93,6 +95,30 @@ app.post('/api/:user/get_reminders', (req, res) => {
         }else {
             res.status(200).json({message: "No reminders found!"})
         }
+    })
+})
+
+app.post('/api/:user/get_capsules', (req,res) => {
+    capsule_type = []
+    capsule_status = []
+    user.findOne({'email': req.params.user}, (err, usr) => {
+        if(err) res.status(200).json({message: "some error occured while fetching capsules!"})
+        capsule_array = usr.capsules
+        const forLoop = async _ => {
+            for(i=0;i<capsule_array.length;i++){
+                capsuleSc.findOne({'_id': capsule_array[i]}, (err, capObj) => {
+                    if(err) res.status(200).json({message: "Some error occured while fetching capsule objects"})
+                    capsule_type.push(capObj.type)
+                    capsule_status.push(capObj.status)
+                    if(capsule_type.length == capsule_array.length -1 || capsule_array.length == 1) {
+                        setTimeout(function() {
+                            res.status(200).json({type: capsule_type, status: capsule_status})
+                        }, 2000)
+                    }
+                })
+            }
+        }
+        forLoop();
     })
 })
 

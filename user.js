@@ -16,7 +16,8 @@ const UserSchema = mongoose.Schema({
         required: true,
         minlength: 10
     },
-    reminders: [{ type: mongoose.Schema.Types.ObjectId, ref: 'remainder' }]
+    reminders: [{ type: mongoose.Schema.Types.ObjectId, ref: 'remainder' }],
+    capsules:  [{ type: mongoose.Schema.Types.ObjectId, ref: 'capsulesc' }]
 });
 
 const reminderSchema = mongoose.Schema({
@@ -28,6 +29,11 @@ const reminderSchema = mongoose.Schema({
 const scheduleSchema = mongoose.Schema({
     date: String,
     users: [{type: String}]
+})
+
+const capsuleSchema = mongoose.Schema({
+    type: Boolean,
+    status: Boolean
 })
 
 const bcrypt = require('bcrypt');
@@ -60,4 +66,5 @@ UserSchema.methods.comparePassword = function(userpass, check){
 const remainder = mongoose.model('remainder', reminderSchema)
 const user = mongoose.model('user', UserSchema);
 const schedular = mongoose.model('schedular', scheduleSchema)
-module.exports = { user, remainder, schedular }
+const capsuleSc = mongoose.model('capsulesc', capsuleSchema)
+module.exports = { user, remainder, schedular, capsuleSc }
