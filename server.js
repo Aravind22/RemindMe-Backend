@@ -3,30 +3,23 @@
 //      Uncomment the send message method before deployment
 // 
 // 
-
-// const DB_URI = "mongodb+srv://atlas:exYkcAnTSR0FPpOh@alpha-2vz7i.mongodb.net/test?retryWrites=true&w=majority";
-const DB_URI = "mongodb://atlas:exYkcAnTSR0FPpOh@alpha-shard-00-00-2vz7i.mongodb.net:27017,alpha-shard-00-01-2vz7i.mongodb.net:27017,alpha-shard-00-02-2vz7i.mongodb.net:27017/test?ssl=true&replicaSet=Alpha-shard-0&authSource=admin&retryWrites=true&w=majority";
-
+require("dotenv").config();
 const express = require('express');
 const bodyparser = require('body-parser');
-const mongoose = require('mongoose');
 const cron = require('node-cron')
 const cors = require('cors');
 const moment = require('moment');
 const http = require('http')
-const apikey = "FMt57wY9T+0-ONGCvL5tZRZErD8ox09G8NgTkwuoWY"
+const auth = require('./middleware/auth')
+require('./db/db')
 
 const app = express();
-const { user, remainder, schedular, capsuleSc } = require('./user')
-
-mongoose.connect(DB_URI, {useNewUrlParser: true})
-.then(() => {console.log("DB Connected")})
-.catch(error => console.log(error));
+const { user, remainder, schedular, capsuleSc } = require('./model/user')
 
 app.use(bodyparser.json());
 app.use(cors())
 
-app.post('/api/user/signup', (req, res) => {
+app.post('/api/user/signup', async (req, res) => {
     const capsule = new capsuleSc()
     capsule.type = true
     capsule.status = false
@@ -36,25 +29,36 @@ app.post('/api/user/signup', (req, res) => {
         password: req.body.password,
         number: req.body.number,
         capsules : capsule
-    }).save((err, response) => {
+    })
+    const token = await user_new.generateAuthToken()
+    user_new.save((err, response) => {
         if(err) res.status(400).send(err)
-        if(response){res.status(200).json({message: 'User created successfully'});}
+        if(response){
+            res.status(200).json({message: 'User created successfully'});
+        }
     })
 })
 
 app.post('/api/user/signin', (req,res) => {
-    user.findOne({'email':req.body.email}, (err,user) => {
+    user.findOne({'email':req.body.email}, (err,usr) => {
         if(err) res.status(200).json({message: 'User not registered'})
-        if(!user) res.json({message: 'Login Failed! User not found'})
-        user.comparePassword(req.body.password, function(err, isMatch){
+        if(!usr) res.json({message: 'Login Failed! User not found'})
+        usr.comparePassword(req.body.password, async function(err, isMatch){
             if(err) return err
             if(!isMatch) res.status(200).json({message:'Wrong password'});
-            else res.status(200).json({message:'Logged in Successfully'});
+            else {
+                const token = await usr.generateAuthToken();
+                res.status(200).json({message:'Logged in Successfully', token: token});
+            }
         })
     })
 })
 
-app.post('/api/:user/delete_reminder/:msg', (req, res) => {
+app.get('/welcome', auth, (req,res) => {
+    res.status(200).send(req.user);
+})
+
+app.post('/api/:user/delete_reminder/:msg', auth, (req, res) => {
     remainder.findOne({'creator':req.params.user,'message':req.params.msg}, (err, rem_obj) => {
         if(err) res.status(200).json({message: "some error occured in getting reminders"})
         if(rem_obj != null) {
@@ -69,7 +73,7 @@ app.post('/api/:user/delete_reminder/:msg', (req, res) => {
     })
 })
 
-app.post('/api/:user/get_reminders', (req, res) => {
+app.post('/api/:user/get_reminders', auth, (req, res) => {
     date_arr = []
     msg_arr = []
     msg_temp = []
@@ -98,7 +102,7 @@ app.post('/api/:user/get_reminders', (req, res) => {
     })
 })
 
-app.post('/api/:user/get_capsules', (req,res) => {
+app.post('/api/:user/get_capsules', auth, (req,res) => {
     capsule_type = []
     capsule_status = []
     user.findOne({'email': req.params.user}, (err, usr) => {
@@ -122,7 +126,7 @@ app.post('/api/:user/get_capsules', (req,res) => {
     })
 })
 
-app.post('/api/:user/add_date', (req, res) => {
+app.post('/api/:user/add_date',auth, (req, res) => {
     var today = moment().format('DD/MM')
     user.findOne({'email': req.params.user}, (err, usr) => {
         if(err) res.status(200).json({message: 'user not found in database'})
@@ -151,6 +155,16 @@ app.post('/api/:user/add_date', (req, res) => {
             sendMsg(req.body.message, usr.number)
         }
     })
+})
+
+app.post('/api/logout', auth, async (req,res) => {
+    try{
+        req.user.tokens.splice(0, req.user.tokens.length)
+        await req.user.save()
+        res.status(200).json({message: "Successfully logged out"})
+    }catch(error){
+        res.status(500).send(error)
+    }
 })
 
 function updateSchedularList(user, req){
@@ -212,7 +226,7 @@ app.post('/api/sendMsg', (req,res) => {
 function sendMsg(msg, number){
     fMsg = "REMINDME REMINDER\nMessage: " + msg 
     encodedmsg = encodeURIComponent(fMsg)
-    const data = 'apikey=' + apikey + '&numbers=' + number + '&message=' + encodedmsg + '&sender=TXTLCL';
+    const data = 'apikey=' + process.env.apikeyprocess + '&numbers=' + number + '&message=' + encodedmsg + '&sender=TXTLCL';
     var options = {
         host: 'api.textlocal.in',
         path: '/send?' + data      
@@ -225,7 +239,6 @@ function sendMsg(msg, number){
         });
         response.on('end', function(){
             var retMsg = JSON.parse(JSON.stringify(str))
-            console.log(str)
         });
 
 1   }
@@ -233,9 +246,13 @@ function sendMsg(msg, number){
     
 }
 
-
-
-const port = process.env.PORT || 4000;
+const port = process.env.PORT
+// https.createServer({
+//     key: fs.readFileSync('cert/server.key'),
+//     cert: fs.readFileSync('cert/server.cert')
+// }, app).listen(port, ()=> {
+//     console.log('Server Deployed on Port: '+ port)
+// })
 app.listen(port, ()=> {
     console.log('Server deployed on port:' + port);
 })

@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
+
 const UserSchema = mongoose.Schema({
     email: {
         type: String,
@@ -17,7 +19,13 @@ const UserSchema = mongoose.Schema({
         minlength: 10
     },
     reminders: [{ type: mongoose.Schema.Types.ObjectId, ref: 'remainder' }],
-    capsules:  [{ type: mongoose.Schema.Types.ObjectId, ref: 'capsulesc' }]
+    capsules:  [{ type: mongoose.Schema.Types.ObjectId, ref: 'capsulesc' }],
+    tokens: [{
+        token: {
+            type: String,
+            required: true
+        }
+    }]
 });
 
 const reminderSchema = mongoose.Schema({
@@ -63,6 +71,15 @@ UserSchema.methods.comparePassword = function(userpass, check){
         check(null, isMatch)
     })
 }
+
+UserSchema.methods.generateAuthToken = async function() {
+    const user = this
+    const token = jwt.sign({email:user.email}, process.env.JWT_KEY)
+    user.tokens = user.tokens.concat({token})
+    await user.save()
+    return token;
+}
+
 const remainder = mongoose.model('remainder', reminderSchema)
 const user = mongoose.model('user', UserSchema);
 const schedular = mongoose.model('schedular', scheduleSchema)
