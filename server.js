@@ -58,20 +58,59 @@ app.get('/welcome', auth, (req,res) => {
     res.status(200).send(req.user);
 })
 
-app.post('/api/:user/delete_reminder/:msg', auth, (req, res) => {
-    remainder.findOne({'creator':req.params.user,'message':req.params.msg}, (err, rem_obj) => {
+app.post('/api/:user/delete_reminder/:date/:msg', auth, (req, res) => {
+    remainder.findOne({'creator':req.params.user,'message':req.params.msg, 'date':req.params.date}, async (err, rem_obj) => {
         if(err) res.status(200).json({message: "some error occured in getting reminders"})
         if(rem_obj != null) {
             msg_array = rem_obj.message;
-            msg_array.splice(msg_array.indexOf(req.params.msg), 1)
-            rem_obj.message = msg_array
-            rem_obj.save()
-            res.status(200).json({message:"Reminder deleted!"})   
+            msg_Id = rem_obj._id
+            _date = rem_obj.date
+            if(msg_array.length == 1){
+                remainder.deleteOne({'_id': msg_Id}, (err, res) => {
+                    if(err) console.log(err)
+                    if(res) console.log("removed remainder object")
+                })
+                user.findOne({'email':req.params.user}, (err, usr) => {
+                    if(err) res.status(200).json({message:"some error occured in fetching user"})
+                    if(usr){
+                        rem_array = usr.reminders
+                        rem_array.splice(rem_array.indexOf(msg_Id), 1)
+                        usr.reminders = rem_array
+                        usr.save()
+                    }
+                })
+                await updateSchedularDelete(req.params.user)
+            }else {
+                msg_array.splice(msg_array.indexOf(req.params.msg), 1)
+                rem_obj.message = msg_array
+                rem_obj.save()
+            }
+            res.status(200).json({message:"Reminder deleted!"}) 
         } else {
             res.status(200).json({message:"Reminder does not exist"})
         }
     })
 })
+
+async function updateSchedularDelete(email){
+    schedular.findOne({'date': _date, 'users':email}, (err, sch_obj) => {
+        if(err) res.status(200).json({message:"Error in fetching schedular"})
+        if(sch_obj){
+            usr_array = sch_obj.users
+            sch_Id = sch_obj._id
+            if(usr_array.length == 1){
+                schedular.deleteOne({'_id': sch_Id}, (err, res) => {
+                    if(err) res.status(200).json({message: "Error in updating schedular"})
+                    if(res) console.log("Removed Schedular Object")
+                })
+            } else {
+                usr_array.splice(usr_array.indexOf(uemailser), 1)
+                sch_obj.users = usr_array
+                sch_obj.save()
+            }
+        }
+    })
+}
 
 app.post('/api/:user/get_reminders', auth, (req, res) => {
     date_arr = []
