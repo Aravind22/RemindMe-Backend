@@ -222,9 +222,9 @@ function updateSchedularList(user, req){
     })
 }
 
-// cron.schedule("* * * * * *", function(){
-//     runSchedular();
-// });
+cron.schedule("0 7 * * *", function(){
+     runSchedular();
+});
 
 function runSchedular(){
     var i;
@@ -258,14 +258,15 @@ function notifyUser(email, msg){
 
 app.post('/api/sendMsg', (req,res) => {
     // Replace X with phone number
-    // sendMsg("Test", "XXXXXXXXXX");
+    sendMsg(req.body.msg, req.body.number);
     res.status(200).json({message: "SMS Delivery Initiated!"})
 })
 
 function sendMsg(msg, number){
     fMsg = "REMINDME REMINDER\nMessage: " + msg 
     encodedmsg = encodeURIComponent(fMsg)
-    const data = 'apikey=' + process.env.apikeyprocess + '&numbers=' + number + '&message=' + encodedmsg + '&sender=TXTLCL';
+    retMsg = ''
+    const data = 'apikey=' + process.env.apikey + '&numbers=' + number + '&message=' + encodedmsg + '&sender=TXTLCL';
     var options = {
         host: 'api.textlocal.in',
         path: '/send?' + data      
@@ -277,7 +278,8 @@ function sendMsg(msg, number){
             str += chunk;;
         });
         response.on('end', function(){
-            var retMsg = JSON.parse(JSON.stringify(str))
+            retMsg = JSON.parse(JSON.stringify(str))
+            console.log(retMsg)
         });
 
 1   }
