@@ -241,7 +241,7 @@ function runSchedular(){
                             if(remObj.date == today){
                                 msgArr = remObj.message
                                 for(i=0;i<msgArr.length;i++){
-                                    // sendMsg(msgArr[i], userObj.number)
+                                    sendMsg(msgArr[i], userObj.number)
                                 }
                             }
                         })
