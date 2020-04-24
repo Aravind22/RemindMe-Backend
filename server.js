@@ -206,6 +206,14 @@ app.post('/api/logout', auth, async (req,res) => {
     }
 })
 
+app.post('/api/date', async (req, res) => {
+    try{
+        console.log(req.body);
+    }catch(error){
+
+    }
+})
+
 function updateSchedularList(user, req){
     schedular.findOne({'date': req.body.date}, (err, schedule) => {
         if(err) res.status(400).json({message: 'error in schedualar object'})
