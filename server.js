@@ -208,6 +208,7 @@ app.post('/api/logout', auth, async (req,res) => {
 
 app.post('/api/date', async (req, res) => {
     try{
+        res.status(200).json({'fulfillmentText': 'This is a response from webhook.'});
         console.log(req.body);
     }catch(error){
 
